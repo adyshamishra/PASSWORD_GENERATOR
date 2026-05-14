@@ -50,6 +50,6 @@ A secure Python-based password manager with GUI, encryption, and strong password
 ## 🧑‍💻 How to Run
 
 ```bash
-git clone https://github.com/your-username/your-repo-name.git
-cd your-repo-name
+git clone https://github.com/adyshamishra/PASSWORD_GENERATOR.git
+cd Password_Generator
 python main.py
