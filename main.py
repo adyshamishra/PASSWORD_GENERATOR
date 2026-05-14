@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import messagebox, simpledialog
 import sqlite3
 import database, security, generator, pyperclip
+from generator import generate_strong_password
 
 class PasswordApp:
     def __init__(self, root):
@@ -64,6 +65,16 @@ class PasswordApp:
 
         self.length_slider = tk.Scale(self.root, from_=8, to_=32, orient="horizontal", length=250)
         self.length_slider.set(16); self.length_slider.pack()
+        # Checkbox: Exclude ambiguous characters
+        self.exclude_ambiguous_var = tk.BooleanVar()
+
+        self.ambiguous_checkbox = tk.Checkbutton(
+            self.root,
+            text="Exclude ambiguous characters (i, l, 1, O, 0)",
+            variable=self.exclude_ambiguous_var
+        )
+
+        self.ambiguous_checkbox.pack(pady=5)
 
         self.result_entry = tk.Entry(self.root, font=("Courier", 14), width=25, justify="center")
         self.result_entry.pack(pady=15)
@@ -77,8 +88,14 @@ class PasswordApp:
         tk.Button(self.root, text="Logout", command=self.show_login_screen, fg="grey", bd=0).pack(side="bottom", pady=10)
 
     def handle_gen(self):
-        pwd = generator.generate_strong_password(self.length_slider.get())
-        self.result_entry.delete(0, tk.END); self.result_entry.insert(0, pwd)
+        pwd = generator.generate_strong_password(
+            self.length_slider.get(),
+            exclude_ambiguous=self.exclude_ambiguous_var.get()
+        )
+
+        self.result_entry.delete(0, tk.END)
+        self.result_entry.insert(0, pwd)
+
         self.status_label.config(text="Strong Password Generated!", fg="#27ae60")
 
     def handle_check(self):
@@ -94,6 +111,15 @@ class PasswordApp:
     def handle_save(self):
         pwd = self.result_entry.get()
         is_secure, missing = generator.check_security(pwd)
+
+        # NEW: enforce ambiguous character rule if checkbox is ON
+        if self.exclude_ambiguous_var.get():
+            if any(c in "il1Lo0O" for c in pwd):
+                messagebox.showerror(
+                    "Invalid Password",
+                    "Password contains ambiguous characters!"
+                )
+                return
         if not is_secure:
             messagebox.showerror("Insecure", f"Cannot save! Needs: {', '.join(missing)}")
             return
